@@ -1,20 +1,12 @@
 #!/usr/bin/env python3
-"""
-Dynamic path override for Netlistify.
+"""Dynamic path override for Netlistify."""
+import os, sys, re
 
-Runs on container boot AFTER validation. Rewrites hardcoded paths in
-inference.py and main_config.py to match container directory layout.
-"""
-import os
-import sys
-import re
-
-
-def patch_file(path: str, substitutions: list) -> bool:
-    with open(path, "r") as f:
+def patch_file(path, subs):
+    with open(path) as f:
         content = f.read()
     modified = False
-    for pattern, replacement in substitutions:
+    for pattern, replacement in subs:
         new_content, count = re.subn(pattern, replacement, content)
         if count > 0:
             content = new_content
@@ -25,44 +17,42 @@ def patch_file(path: str, substitutions: list) -> bool:
             f.write(content)
     return modified
 
-
 def patch_inference():
-    path = "/app/inference.py"
     subs = [
         (r'torch\.load\(\s*"bubble_orientation/res50_1\.pt"\s*,',
          r'torch.load("/opt/netlistify/weights/res50_1.pt",'),
         (r'torch\.load\(\s*"bubble_orientation/cc_res50_1\.pt"\s*,',
          r'torch.load("/opt/netlistify/weights/cc_res50_1.pt",'),
         (r'img_dir\s*=\s*"[^"]*"',
-         r'img_dir = "/workspace/input/"'),
-        (r'output_folder\s*=\s*Path\(\s*"[^"]*"\s*',
-         r'output_folder = Path("/workspace/results/"'),
+         r'img_dir = "/workspace/input/images/"'),
+        (r'output_folder\s*=\s*Path\(.+',
+         r'output_folder = Path("/workspace/results/")'),
     ]
-    ok = patch_file(path, subs)
-    print(f"PASS: inference.py" if ok else "FAIL: No inference.py matches")
-
+    ok = patch_file("/app/inference.py", subs)
+    print("PASS: inference.py" if ok else "FAIL: No inference.py matches")
 
 def patch_main_config():
-    path = "/app/main_config.py"
     subs = [
         (r'return\s+"runs/[^"]*best_train\.pth"',
          'return "/opt/netlistify/weights/best_train.pth"'),
-        (r'return\s+"/[^"]*best_train\.pth"',
-         'return "/opt/netlistify/weights/best_train.pth"'),
     ]
-    ok = patch_file(path, subs)
-    print(f"PASS: main_config.py" if ok else "NOTE: main_config.py DETR path not patched")
+    ok = patch_file("/app/main_config.py", subs)
+    print("PASS: main_config.py" if ok else "NOTE: main_config.py unchanged")
 
+def patch_testing():
+    subs = [
+        (r'(weight_dir\s*=\s*Path\(__file__\)\.parent\s*/)\s*"runs/FormalDatasetWindowedLinePair"',
+         r'\1 "/opt/netlistify/weights"'),
+    ]
+    ok = patch_file("/app/testing.py", subs)
+    print("PASS: testing.py" if ok else "NOTE: testing.py unchanged")
 
 def main():
     print("[patch_paths] Applying container path overrides ...")
-    for target in ["/app/inference.py", "/app/main_config.py"]:
-        if not os.path.exists(target):
-            print(f"WARNING: {target} not found — skipping", file=sys.stderr)
     patch_inference()
     patch_main_config()
+    patch_testing()
     sys.exit(0)
-
 
 if __name__ == "__main__":
     main()
