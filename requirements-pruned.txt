@@ -1,0 +1,21 @@
+# Netlistify Inference-Only Dependencies
+# Pruned from original 65-package requirements.txt
+# Stripped: training (wandb, optuna), GUI (pyqt6, pyside6), Jupyter, plotting
+
+# Geometric & Spatial
+shapely==2.0.4
+numba==0.60.0
+
+# Image Processing
+opencv-python-headless==4.9.0.80
+
+# Math & Scientific
+numpy>=1.24
+scipy>=1.10
+
+# Netlist Output
+pyspice==1.5
+
+# Utilities (verified needed by util.py/utility.py)
+Pillow>=10.0
+scikit-image>=0.21

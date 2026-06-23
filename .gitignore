@@ -1,0 +1,15 @@
+# Large binary files — downloaded at build time
+weights/
+*.pt
+*.pth
+*.pkl
+
+# Netlistify source — cloned during Docker build
+Netlistify/
+
+# Docker artifacts
+*.log
+
+# IDE
+.vscode/
+.idea/
