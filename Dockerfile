@@ -10,7 +10,7 @@ ENV PYTHONUNBUFFERED=1
 # ── System + Netlistify Source ───────────────────────────────────
 RUN apt-get update && apt-get install -y --no-install-recommends \
     supervisor openssh-server git libgl1-mesa-glx libglib2.0-0 \
-    curl ca-certificates \
+    curl ca-certificates build-essential \
     && rm -rf /var/lib/apt/lists/* \
     && git clone --depth 1 https://github.com/NYCU-AI-EDA/Netlistify.git /app
 
@@ -23,12 +23,9 @@ RUN mkdir -p /var/run/sshd && echo 'root:root' | chpasswd \
 RUN mkdir -p /opt/netlistify/weights /workspace/input /workspace/results /var/log/supervisor
 
 # ── Python Dependencies ─────────────────────────────────────────
-# torch + torchvision pre-installed. Install full Netlistify
-# requirements minus packages that fail to build (evdev, stringzilla)
-# or are GUI (pyqt6, pyside6).
+# torch + torchvision pre-installed. Install ALL Netlistify deps.
 RUN cd /app && pip install --no-cache-dir \
-    $(grep -vE '^torch==|^pyqt6|^pyside6|^pyqt6-webengine|^evdev|^stringzilla' requirements.txt | tr '\n' ' ') \
-    || true \
+    $(grep -vE '^torch==|^pyqt6|^pyside6|^pyqt6-webengine' requirements.txt | tr '\n' ' ') \
     && pip install --no-cache-dir --force-reinstall 'numpy>=1.24,<2.0'
 
 # ── Model Weights ───────────────────────────────────────────────
