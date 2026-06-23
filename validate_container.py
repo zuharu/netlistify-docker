@@ -1,13 +1,7 @@
 #!/usr/bin/env python3
 """
 Container self-validation diagnostic script.
-
-Runs on container boot via supervisord. Checks:
-  1. GPU visibility and compute capability
-  2. Model weight file presence and integrity
-  3. Deserialization sanity check
-
-Exit 0 = pass, Exit 1 = fail.
+Checks GPU, weight files, and deserialization on boot.
 """
 import os
 import sys
@@ -15,7 +9,7 @@ import torch
 
 WEIGHTS_DIR = "/opt/netlistify/weights"
 REQUIRED_WEIGHTS = {
-    "DETR Wire Connectivity": "pretrained.pt",
+    "DETR Wire Connectivity": "best_train.pth",
     "ResNet50 Orientation":   "res50_1.pt",
     "Component Classifier":   "cc_res50_1.pt",
 }
@@ -30,7 +24,7 @@ def check_gpu() -> str:
     print(f"  GPU: {name}")
     print(f"  Compute Capability: {cap[0]}.{cap[1]}")
     if cap[0] < 8:
-        print(f"  WARNING: Below Ampere (8.0). Inference may be slow.", file=sys.stderr)
+        print("  WARNING: Below Ampere (8.0). Inference may be slow.", file=sys.stderr)
     return name
 
 

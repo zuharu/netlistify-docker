@@ -12,16 +12,11 @@ ENV PYTHONUNBUFFERED=1
 
 # ── System Dependencies ──────────────────────────────────────────
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    # Supervisor process manager
     supervisor \
-    # SSH daemon for vast.ai connectivity
     openssh-server \
-    # Git for cloning Netlistify repo
     git \
-    # OpenCV runtime (no X11 display needed)
     libgl1-mesa-glx \
     libglib2.0-0 \
-    # Utility
     curl \
     ca-certificates \
     && rm -rf /var/lib/apt/lists/*
@@ -48,14 +43,10 @@ RUN pip install --no-cache-dir -r /tmp/requirements-pruned.txt && \
 RUN git clone --depth 1 https://github.com/NYCU-AI-EDA/Netlistify.git /app
 
 # ── Pre-Trained Model Weights ───────────────────────────────────
-RUN pip install gdown -q && \
-    mkdir -p /opt/netlistify/weights && \
-    gdown --id 1Jlx9HNfrTIXrjIOyIL3zyy_rDrcfKKzZ \
-        -O /opt/netlistify/weights/pretrained.pt 2>/dev/null || \
-    echo "WARNING: pretrained.pt download failed" && \
-    touch /opt/netlistify/weights/res50_1.pt && \
-    touch /opt/netlistify/weights/cc_res50_1.pt && \
-    pip uninstall gdown -y -q
+# From model.zip (743 MB): res50_1.pt (94MB), cc_res50_1.pt (94MB), best_train.pth (185MB)
+COPY model/bubble_orientation/res50_1.pt /opt/netlistify/weights/res50_1.pt
+COPY model/bubble_orientation/cc_res50_1.pt /opt/netlistify/weights/cc_res50_1.pt
+COPY model/runs/FormalDatasetWindowedLinePair/0113_14-34-52/best_train.pth /opt/netlistify/weights/best_train.pth
 
 # ── Boot Scripts ────────────────────────────────────────────────
 COPY patch_paths.py     /app/patch_paths.py
