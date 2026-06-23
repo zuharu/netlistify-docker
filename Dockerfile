@@ -23,10 +23,12 @@ RUN mkdir -p /var/run/sshd && echo 'root:root' | chpasswd \
 RUN mkdir -p /opt/netlistify/weights /workspace/input /workspace/results /var/log/supervisor
 
 # ── Python Dependencies ─────────────────────────────────────────
-# torch + torchvision pre-installed in base. Install full Netlistify
-# requirements minus GUI/training packages that fail in headless.
+# torch + torchvision pre-installed. Install full Netlistify
+# requirements minus packages that fail to build (evdev, stringzilla)
+# or are GUI (pyqt6, pyside6).
 RUN cd /app && pip install --no-cache-dir \
-    $(grep -vE '^torch==|^pyqt6|^pyside6|^pyqt6-webengine' requirements.txt | tr '\n' ' ') \
+    $(grep -vE '^torch==|^pyqt6|^pyside6|^pyqt6-webengine|^evdev|^stringzilla' requirements.txt | tr '\n' ' ') \
+    || true \
     && pip install --no-cache-dir --force-reinstall 'numpy>=1.24,<2.0'
 
 # ── Model Weights ───────────────────────────────────────────────
